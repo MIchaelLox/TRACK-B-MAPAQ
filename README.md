@@ -1,4 +1,4 @@
-# Track B – MAPAQ Predictive Health Model (Karamba)
+# Track B – MAPAQ Predictive Health Model
 
 Goal: Predict restaurant risk profiles based on public inspection datasets + derived variables.
 
