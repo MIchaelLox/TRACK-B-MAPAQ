@@ -1,0 +1,121 @@
+# ===========================================
+# .gitignore - Projet MAPAQ Track-B
+# ===========================================
+
+# ========== PYTHON ==========
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ========== VIRTUAL ENVIRONMENTS ==========
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ========== JUPYTER NOTEBOOKS ==========
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# ========== DATA FILES ==========
+*.csv
+*.json
+*.xlsx
+*.xls
+*.parquet
+data/
+datasets/
+raw_data/
+processed_data/
+
+# ========== MODELS & CACHE ==========
+models/
+*.pkl
+*.joblib
+*.model
+.cache/
+*.cache
+
+# ========== LOGS ==========
+*.log
+logs/
+log/
+
+# ========== DATABASE ==========
+*.db
+*.sqlite
+*.sqlite3
+
+# ========== IDE & EDITORS ==========
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ========== OS ==========
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ========== TESTING ==========
+.coverage
+.pytest_cache/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# ========== DOCUMENTATION ==========
+docs/_build/
+
+# ========== DEPLOYMENT ==========
+.docker/
+docker-compose.override.yml
+
+# ========== API KEYS & SECRETS ==========
+.env.local
+.env.production
+config/secrets.yml
+api_keys.txt
+credentials.json
+
+# ========== TEMPORARY FILES ==========
+tmp/
+temp/
+*.tmp
+*.temp
+
+# ========== INTEGRATION TRACK-A/C ==========
+# Fichiers partagés avec autres projets
+shared_config/
+integration_cache/

@@ -1,0 +1,90 @@
+# ===========================================
+# Requirements.txt - Projet MAPAQ Track-B
+# Plan 200h - Dépendances complètes
+# ===========================================
+
+# ========== CORE DATA PROCESSING ==========
+pandas>=1.5.0
+numpy>=1.21.0
+scipy>=1.9.0
+
+# ========== MACHINE LEARNING ==========
+scikit-learn>=1.1.0
+xgboost>=1.6.0
+lightgbm>=3.3.0
+
+# ========== WEB & API ==========
+requests>=2.28.0
+urllib3>=1.26.0
+httpx>=0.24.0
+
+# ========== WEB FRAMEWORK (Dashboard) ==========
+flask>=2.2.0
+flask-cors>=3.0.10
+fastapi>=0.95.0
+uvicorn>=0.20.0
+gunicorn>=20.1.0
+
+# ========== GEOSPATIAL & MAPPING ==========
+folium>=0.14.0
+geopy>=2.2.0
+geopandas>=0.12.0
+shapely>=2.0.0
+pyproj>=3.4.0
+
+# ========== VISUALIZATION ==========
+plotly>=5.10.0
+matplotlib>=3.5.0
+seaborn>=0.11.0
+bokeh>=2.4.0
+dash>=2.8.0
+
+# ========== DATABASE ==========
+sqlalchemy>=1.4.0
+sqlite3
+psycopg2-binary>=2.9.0
+pymongo>=4.3.0
+
+# ========== NLP & TEXT PROCESSING ==========
+nltk>=3.8.0
+spacy>=3.5.0
+textblob>=0.17.0
+
+# ========== DEVELOPMENT & TESTING ==========
+pytest>=7.0.0
+pytest-cov>=4.0.0
+black>=22.0.0
+flake8>=5.0.0
+mypy>=1.0.0
+
+# ========== JUPYTER & NOTEBOOKS ==========
+jupyter>=1.0.0
+jupyterlab>=3.6.0
+ipywidgets>=8.0.0
+
+# ========== DATA VALIDATION ==========
+jsonschema>=4.0.0
+pydantic>=1.10.0
+cerberus>=1.3.0
+
+# ========== CONFIGURATION & LOGGING ==========
+pyyaml>=6.0
+python-dotenv>=1.0.0
+loguru>=0.6.0
+
+# ========== DEPLOYMENT & MONITORING ==========
+docker>=6.0.0
+prometheus-client>=0.16.0
+
+# ========== INTEGRATION TRACK-A/C ==========
+# Pour intégration avec autres projets
+redis>=4.5.0
+celery>=5.2.0
+
+# ========== PERFORMANCE ==========
+numba>=0.56.0
+cython>=0.29.0
+
+# ========== DATE & TIME ==========
+python-dateutil>=2.8.0
+pytz>=2022.7
