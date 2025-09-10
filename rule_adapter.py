@@ -1,7 +1,3 @@
-# ===========================================
-# File: rule_adapter.py
-# Purpose: Adapt model to new regulation rules
-# ===========================================
 
 
 class RuleAdapter:

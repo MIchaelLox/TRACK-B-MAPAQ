@@ -1,7 +1,3 @@
-# ===========================================
-# File: test_data_ingest.py
-# Purpose: Test script for DataIngestor class
-# ===========================================
 
 from data_ingest import DataIngestor
 import os

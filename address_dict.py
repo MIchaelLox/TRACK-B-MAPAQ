@@ -1,8 +1,3 @@
-# ===========================================
-# File: address_dict.py
-# Purpose: Normalize addresses for geocoding
-# ===========================================
-
 
 class AddressDictionary:
 def __init__(self, data):

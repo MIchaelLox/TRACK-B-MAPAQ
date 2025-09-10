@@ -1,7 +1,3 @@
-# ===========================================
-# File: geo_map.py
-# Purpose: Display restaurants on map
-# ===========================================
 
 
 class GeoMap:

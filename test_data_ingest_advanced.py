@@ -1,8 +1,3 @@
-# ===========================================
-# File: test_data_ingest_advanced.py
-# Purpose: Test avancé pour DataIngestor avec API MAPAQ
-# Heures 5-8 : Validation implémentation complète
-# ===========================================
 
 import sys
 import os

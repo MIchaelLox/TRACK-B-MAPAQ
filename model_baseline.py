@@ -1,8 +1,3 @@
-# ===========================================
-# File: model_baseline.py
-# Purpose: Train baseline probability model
-# ===========================================
-
 
 class BaselineModel:
 def __init__(self, clean_data):

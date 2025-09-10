@@ -1,7 +1,3 @@
-# ===========================================
-# File: probability_engine.py
-# Purpose: Calculate conditional probabilities for infractions
-# ===========================================
 
 
 class ProbabilityEngine:

@@ -1,8 +1,3 @@
-# ===========================================
-# File: theme_dict.py
-# Purpose: Classify restaurant themes by keywords
-# ===========================================
-
 
 class ThemeDictionary:
 def __init__(self, data):

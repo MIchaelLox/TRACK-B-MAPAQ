@@ -1,7 +1,3 @@
-# ===========================================
-# File: test_simple.py
-# Purpose: Simple test without external dependencies
-# ===========================================
 
 import csv
 import os

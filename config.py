@@ -1,7 +1,3 @@
-# ===========================================
-# File: config.py
-# Purpose: Configuration centrale du projet MAPAQ Track-B
-# ===========================================
 
 import os
 from pathlib import Path
@@ -14,7 +10,7 @@ MODELS_DIR = PROJECT_ROOT / "models"
 LOGS_DIR = PROJECT_ROOT / "logs"
 CACHE_DIR = PROJECT_ROOT / "cache"
 
-# Créer les répertoires s'ils n'existent pas
+# Création les répertoires s'ils n'existent pas
 for directory in [DATA_DIR, MODELS_DIR, LOGS_DIR, CACHE_DIR]:
     directory.mkdir(exist_ok=True)
 

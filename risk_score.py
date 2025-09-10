@@ -1,8 +1,3 @@
-# ===========================================
-# File: risk_score.py
-# Purpose: Generate risk score per restaurant
-# ===========================================
-
 
 class RiskScorer:
 def __init__(self, probability_engine):

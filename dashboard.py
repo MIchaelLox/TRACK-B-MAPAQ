@@ -1,8 +1,3 @@
-# ===========================================
-# File: dashboard.py
-# Purpose: Visualization dashboard
-# ===========================================
-
 
 class Dashboard:
 def __init__(self, risk_data):

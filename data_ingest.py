@@ -1,8 +1,3 @@
-# ===========================================
-# File: data_ingest.py
-# Purpose: Collect MAPAQ inspection datasets
-# Heures 5-8 : Implémentation complète avec API MAPAQ
-# ===========================================
 
 import pandas as pd
 import requests
