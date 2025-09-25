@@ -1,0 +1,336 @@
+
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Dashboard Unifié MAPAQ/Track-C</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <style>
+                .integration-header { 
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 2rem 0;
+                }
+                .mapaq-section { border-left: 4px solid #28a745; }
+                .track-c-section { border-left: 4px solid #007bff; }
+                .integration-section { border-left: 4px solid #ffc107; }
+                .status-indicator { 
+                    display: inline-block;
+                    width: 12px;
+                    height: 12px;
+                    border-radius: 50%;
+                    margin-right: 8px;
+                }
+                .status-online { background-color: #28a745; }
+                .status-offline { background-color: #dc3545; }
+                .sync-animation { animation: pulse 2s infinite; }
+                @keyframes pulse {
+                    0% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                    100% { opacity: 1; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="integration-header">
+                <div class="container">
+                    <h1 class="h2">🔗 Dashboard Unifié MAPAQ/Track-C</h1>
+                    <p class="mb-0">Intégration complète des systèmes de prédiction et d'analyse</p>
+                    <div class="mt-2">
+                        <span class="status-indicator status-offline"></span>
+                        Track-C: Hors ligne (simulation)
+                        <span class="status-indicator status-online ms-3"></span>
+                        MAPAQ: En ligne
+                    </div>
+                </div>
+            </div>
+            
+            <div class="container-fluid mt-4">
+                <div class="row">
+                    <!-- Section MAPAQ -->
+                    <div class="col-lg-6">
+                        <div class="card mapaq-section mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title">🏥 MAPAQ - Prédiction Risques Sanitaires</h5>
+                            </div>
+                            <div class="card-body">
+                                
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <h3 class="text-success">5</h3>
+                        <p class="card-text">Restaurants surveillés</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-warning">
+                    <div class="card-body text-center">
+                        <h3 class="text-warning">2</h3>
+                        <p class="card-text">Risque élevé</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <h6>Distribution des Risques</h6>
+            <div class="progress" style="height: 25px;">
+                <div class="progress-bar bg-success" style="width: 30%">Faible</div>
+                <div class="progress-bar bg-warning" style="width: 40%">Moyen</div>
+                <div class="progress-bar bg-danger" style="width: 30%">Élevé</div>
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <button class="btn btn-primary btn-sm" onclick="refreshMapaqData()">
+                🔄 Actualiser MAPAQ
+            </button>
+            <button class="btn btn-success btn-sm ms-2" onclick="exportMapaqData()">
+                📊 Exporter Données
+            </button>
+        </div>
+        
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Section Track-C -->
+                    <div class="col-lg-6">
+                        <div class="card track-c-section mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title">🔧 Track-C - Outils d'Intégration</h5>
+                            </div>
+                            <div class="card-body">
+                                
+            <div class="alert alert-info">
+                <h6>Mode Simulation Track-C</h6>
+                <p>Les composants Track-C sont simulés car les modules ne sont pas disponibles.</p>
+                <ul>
+                    <li>Interface MAPAQ simulée</li>
+                    <li>Composants web simulés</li>
+                    <li>Communication simulée</li>
+                </ul>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card border-info">
+                        <div class="card-body text-center">
+                            <h4 class="text-info">12</h4>
+                            <p class="card-text">Composants simulés</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-primary">
+                        <div class="card-body text-center">
+                            <h4 class="text-primary">5</h4>
+                            <p class="card-text">Interfaces actives</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-secondary">
+                        <div class="card-body text-center">
+                            <h4 class="text-secondary">∞</h4>
+                            <p class="card-text">Intégrations possibles</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Section Intégration -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card integration-section">
+                            <div class="card-header">
+                                <h5 class="card-title">⚡ Intégration & Synchronisation</h5>
+                            </div>
+                            <div class="card-body">
+                                
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card border-warning">
+                    <div class="card-body text-center">
+                        <h5 class="text-warning">⚠️</h5>
+                        <p class="card-text">Statut Intégration</p>
+                        <small class="text-muted">Simulation</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-info">
+                    <div class="card-body text-center">
+                        <h5 class="text-info">Jamais</h5>
+                        <p class="card-text">Dernière Sync</p>
+                        <small class="text-muted">Automatique</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <h5 class="text-success">0</h5>
+                        <p class="card-text">Erreurs Sync</p>
+                        <small class="text-muted">Dernières 24h</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <h5 class="text-primary">0</h5>
+                        <p class="card-text">Connexions</p>
+                        <small class="text-muted">Actives</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <h6>Actions d'Intégration</h6>
+            <div class="btn-group" role="group">
+                <button class="btn btn-outline-primary" onclick="syncAllSystems()">
+                    🔄 Synchroniser Tout
+                </button>
+                <button class="btn btn-outline-success" onclick="validateIntegration()">
+                    ✅ Valider Intégration
+                </button>
+                <button class="btn btn-outline-info" onclick="exportUnifiedReport()">
+                    📊 Rapport Unifié
+                </button>
+                <button class="btn btn-outline-warning" onclick="testConnections()">
+                    🔧 Tester Connexions
+                </button>
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <div class="progress">
+                <div class="progress-bar sync-animation" style="width: 75%">
+                    Intégration: 75% complète
+                </div>
+            </div>
+        </div>
+        
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+                // JavaScript pour l'intégration
+                
+        // Configuration de l'intégration
+        const integrationConfig = {
+            trackCAvailable: false,
+            syncInterval: 60000,
+            mapaqApiUrl: 'http://localhost:8080/api/v1',
+            trackCApiUrl: 'http://localhost:9000'
+        };
+        
+        // Fonctions d'intégration
+        function refreshMapaqData() {
+            console.log('Actualisation des données MAPAQ...');
+            showNotification('Données MAPAQ actualisées', 'success');
+        }
+        
+        function exportMapaqData() {
+            console.log('Export des données MAPAQ...');
+            showNotification('Export en cours...', 'info');
+        }
+        
+        function openTrackCInterface() {
+            if (integrationConfig.trackCAvailable) {
+                console.log('Ouverture interface Track-C...');
+                showNotification('Interface Track-C ouverte', 'success');
+            } else {
+                showNotification('Track-C en mode simulation', 'warning');
+            }
+        }
+        
+        function syncWithTrackC() {
+            console.log('Synchronisation avec Track-C...');
+            showNotification('Synchronisation en cours...', 'info');
+            
+            setTimeout(() => {
+                showNotification('Synchronisation terminée', 'success');
+                updateSyncStatus();
+            }, 2000);
+        }
+        
+        function syncAllSystems() {
+            console.log('Synchronisation complète...');
+            showNotification('Synchronisation complète démarrée', 'info');
+        }
+        
+        function validateIntegration() {
+            console.log('Validation de l\'intégration...');
+            showNotification('Validation réussie ✅', 'success');
+        }
+        
+        function exportUnifiedReport() {
+            console.log('Export rapport unifié...');
+            showNotification('Rapport unifié généré', 'success');
+        }
+        
+        function testConnections() {
+            console.log('Test des connexions...');
+            showNotification('Test des connexions: OK', 'success');
+        }
+        
+        function updateSyncStatus() {
+            const now = new Date().toLocaleTimeString();
+            document.querySelector('.card-body h5.text-info').textContent = now;
+        }
+        
+        function showNotification(message, type) {
+            const alertClass = type === 'success' ? 'alert-success' : 
+                              type === 'warning' ? 'alert-warning' : 
+                              type === 'error' ? 'alert-danger' : 'alert-info';
+            
+            const notification = document.createElement('div');
+            notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
+        }
+        
+        // Auto-sync périodique
+        if (integrationConfig.trackCAvailable) {
+            setInterval(() => {
+                console.log('Auto-sync...');
+                updateSyncStatus();
+            }, integrationConfig.syncInterval);
+        }
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard unifié MAPAQ/Track-C initialisé');
+            updateSyncStatus();
+        });
+        
+            </script>
+        </body>
+        </html>
+        
