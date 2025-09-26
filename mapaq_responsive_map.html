@@ -1,0 +1,1222 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carte Interactive MAPAQ - Risques Sanitaires</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #map { height: 100vh; width: 100%; }
+        .map-controls { position: absolute; top: 10px; right: 10px; z-index: 1000; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 300px; }
+        .restaurant-popup { min-width: 250px; font-size: 14px; }
+        .popup-content p { margin: 5px 0; }
+        .popup-actions { margin-top: 10px; text-align: center; }
+        .popup-actions button { margin: 2px; }
+        .legend { position: absolute; bottom: 20px; left: 20px; z-index: 1000; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .legend-item { display: flex; align-items: center; margin: 5px 0; }
+        .legend-color { width: 20px; height: 20px; border-radius: 50%; margin-right: 10px; }
+        .stats-panel { position: absolute; top: 10px; left: 10px; z-index: 1000; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); min-width: 200px; }
+        
+        /* ========== RESPONSIVE DESIGN AVANCÉ ========== */
+        
+        /* Variables CSS pour cohérence */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            
+            --border-radius: 8px;
+            --box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --transition: all 0.3s ease;
+            
+            --panel-width-desktop: 300px;
+            --panel-width-tablet: 250px;
+            --panel-width-mobile: 100%;
+        }
+        
+        /* Base responsive */
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        /* Carte principale */
+        #map {
+            height: 100vh;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* ========== PANNEAUX ADAPTATIFS ========== */
+        
+        .map-panel {
+            position: absolute;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            z-index: 1000;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        /* Panneau de statistiques */
+        .stats-panel {
+            top: 10px;
+            left: 10px;
+            width: var(--panel-width-desktop);
+            padding: 15px;
+        }
+        
+        /* Panneau de contrôles */
+        .map-controls {
+            top: 10px;
+            right: 10px;
+            width: var(--panel-width-desktop);
+            padding: 15px;
+        }
+        
+        /* Légende */
+        .legend {
+            bottom: 20px;
+            left: 20px;
+            padding: 15px;
+            max-width: 250px;
+        }
+        
+        /* ========== DESIGN TABLETTE (768px - 1024px) ========== */
+        
+        @media (max-width: 1024px) and (min-width: 769px) {
+            .stats-panel,
+            .map-controls {
+                width: var(--panel-width-tablet);
+                padding: 12px;
+            }
+            
+            .stats-panel {
+                top: 5px;
+                left: 5px;
+            }
+            
+            .map-controls {
+                top: 5px;
+                right: 5px;
+            }
+            
+            .legend {
+                bottom: 10px;
+                left: 10px;
+                padding: 12px;
+            }
+            
+            /* Réduction taille police */
+            .map-panel {
+                font-size: 14px;
+            }
+            
+            .map-panel h5 {
+                font-size: 16px;
+                margin-bottom: 8px;
+            }
+        }
+        
+        /* ========== DESIGN MOBILE (< 768px) ========== */
+        
+        @media (max-width: 768px) {
+            /* Carte réduite pour laisser place aux contrôles */
+            #map {
+                height: 60vh;
+            }
+            
+            /* Panneaux en mode mobile */
+            .map-panel {
+                position: relative;
+                width: 100%;
+                margin: 5px 0;
+                border-radius: 0;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            
+            .stats-panel,
+            .map-controls {
+                position: relative;
+                top: auto;
+                left: auto;
+                right: auto;
+                width: 100%;
+                padding: 10px;
+                margin: 0;
+            }
+            
+            .legend {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                width: 100%;
+                margin: 5px 0;
+                padding: 10px;
+            }
+            
+            /* Container mobile */
+            .mobile-container {
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+            }
+            
+            .mobile-controls {
+                flex: 0 0 auto;
+                background: var(--light-color);
+                padding: 10px;
+                border-top: 1px solid #dee2e6;
+                max-height: 40vh;
+                overflow-y: auto;
+            }
+            
+            /* Menu hamburger */
+            .hamburger-menu {
+                display: block;
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                z-index: 2000;
+                background: white;
+                border: none;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                box-shadow: var(--box-shadow);
+                cursor: pointer;
+                transition: var(--transition);
+            }
+            
+            .hamburger-menu:hover {
+                background: var(--light-color);
+                transform: scale(1.05);
+            }
+            
+            .hamburger-menu i {
+                font-size: 20px;
+                color: var(--primary-color);
+            }
+            
+            /* Menu mobile coulissant */
+            .mobile-menu {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 80%;
+                max-width: 300px;
+                height: 100vh;
+                background: white;
+                box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+                transition: right 0.3s ease;
+                z-index: 1500;
+                overflow-y: auto;
+                padding: 70px 20px 20px;
+            }
+            
+            .mobile-menu.active {
+                right: 0;
+            }
+            
+            .mobile-menu-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 1400;
+                opacity: 0;
+                visibility: hidden;
+                transition: var(--transition);
+            }
+            
+            .mobile-menu-overlay.active {
+                opacity: 1;
+                visibility: visible;
+            }
+            
+            /* Bouton fermeture menu */
+            .close-menu {
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                background: none;
+                border: none;
+                font-size: 24px;
+                color: var(--secondary-color);
+                cursor: pointer;
+            }
+            
+            /* Réduction tailles mobiles */
+            .map-panel h5 {
+                font-size: 14px;
+                margin-bottom: 8px;
+            }
+            
+            .map-panel {
+                font-size: 12px;
+            }
+            
+            .btn-sm {
+                font-size: 11px;
+                padding: 4px 8px;
+            }
+        }
+        
+        /* ========== DESIGN TRÈS PETIT MOBILE (< 480px) ========== */
+        
+        @media (max-width: 480px) {
+            #map {
+                height: 50vh;
+            }
+            
+            .mobile-menu {
+                width: 90%;
+            }
+            
+            .hamburger-menu {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .hamburger-menu i {
+                font-size: 18px;
+            }
+            
+            .map-panel {
+                font-size: 11px;
+                padding: 8px;
+            }
+            
+            .legend-item {
+                margin: 3px 0;
+            }
+            
+            .legend-color {
+                width: 15px;
+                height: 15px;
+            }
+        }
+        
+        /* ========== POPUPS RESPONSIVES ========== */
+        
+        .leaflet-popup-content-wrapper {
+            border-radius: var(--border-radius);
+        }
+        
+        @media (max-width: 768px) {
+            .leaflet-popup-content-wrapper {
+                max-width: 250px !important;
+                min-width: 200px;
+            }
+            
+            .restaurant-popup {
+                font-size: 12px;
+            }
+            
+            .restaurant-popup h3 {
+                font-size: 14px;
+                margin-bottom: 8px;
+            }
+            
+            .popup-actions button {
+                font-size: 10px;
+                padding: 3px 6px;
+                margin: 1px;
+            }
+        }
+        
+        /* ========== OPTIMISATIONS TACTILES ========== */
+        
+        @media (hover: none) and (pointer: coarse) {
+            /* Appareils tactiles */
+            .btn, .form-control, .form-select {
+                min-height: 44px; /* Taille minimum tactile */
+            }
+            
+            .hamburger-menu {
+                min-width: 44px;
+                min-height: 44px;
+            }
+            
+            /* Espacement tactile */
+            .form-check {
+                margin: 8px 0;
+            }
+            
+            .form-check-input {
+                width: 20px;
+                height: 20px;
+            }
+            
+            /* Marqueurs plus grands sur tactile */
+            .custom-marker div {
+                width: 35px !important;
+                height: 35px !important;
+            }
+        }
+        
+        /* ========== ANIMATIONS ET TRANSITIONS ========== */
+        
+        .map-panel {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Hover effects pour desktop */
+        @media (hover: hover) and (pointer: fine) {
+            .btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            }
+            
+            .map-panel:hover {
+                box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            }
+        }
+        
+        /* ========== ACCESSIBILITÉ ========== */
+        
+        /* Focus visible pour navigation clavier */
+        .btn:focus,
+        .form-control:focus,
+        .form-select:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+        
+        /* Réduction mouvement pour utilisateurs sensibles */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* Mode sombre */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --light-color: #2d3748;
+                --dark-color: #f7fafc;
+            }
+            
+            .map-panel {
+                background: #2d3748;
+                color: #f7fafc;
+            }
+            
+            .mobile-menu {
+                background: #2d3748;
+                color: #f7fafc;
+            }
+        }
+        
+        /* ========== UTILITAIRES RESPONSIVE ========== */
+        
+        .d-mobile-none {
+            display: block;
+        }
+        
+        .d-mobile-block {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .d-mobile-none {
+                display: none;
+            }
+            
+            .d-mobile-block {
+                display: block;
+            }
+        }
+        
+        .text-mobile-center {
+            text-align: left;
+        }
+        
+        @media (max-width: 768px) {
+            .text-mobile-center {
+                text-align: center;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <!-- Panneau de statistiques -->
+    <div class="stats-panel">
+        <h5><i class="fas fa-chart-bar"></i> Statistiques</h5>
+        <div id="stats-content">
+            <p><strong>Total restaurants:</strong> <span id="total-count">0</span></p>
+            <p><strong>Risque critique:</strong> <span id="critical-count">0</span></p>
+            <p><strong>Risque élevé:</strong> <span id="high-count">0</span></p>
+            <p><strong>Risque modéré:</strong> <span id="medium-count">0</span></p>
+            <p><strong>Risque faible:</strong> <span id="low-count">0</span></p>
+        </div>
+    </div>
+    
+    <!-- Contrôles de la carte -->
+    <div class="map-controls">
+        <h5><i class="fas fa-sliders-h"></i> Contrôles</h5>
+        <div class="mb-3">
+            <label class="form-label">Affichage:</label>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="show-markers" checked>
+                <label class="form-check-label" for="show-markers">Marqueurs</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="show-clusters" checked>
+                <label class="form-check-label" for="show-clusters">Clusters</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="show-heatmap">
+                <label class="form-check-label" for="show-heatmap">Heatmap</label>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="risk-filter" class="form-label">Filtrer par risque:</label>
+            <select class="form-select" id="risk-filter">
+                <option value="all">Tous les niveaux</option>
+                <option value="Critique">Critique uniquement</option>
+                <option value="Élevé">Élevé uniquement</option>
+                <option value="Modéré">Modéré uniquement</option>
+                <option value="Faible">Faible uniquement</option>
+            </select>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="resetMap()">
+            <i class="fas fa-home"></i> Réinitialiser
+        </button>
+    </div>
+    
+    <!-- Carte principale -->
+    <div id="map"></div>
+    
+    <!-- Légende -->
+    <div class="legend">
+        <h6><i class="fas fa-info-circle"></i> Niveaux de risque</h6>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #dc3545;"></div>
+            <span>Critique (≥ 0.8)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #fd7e14;"></div>
+            <span>Élevé (0.6 - 0.8)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #ffc107;"></div>
+            <span>Modéré (0.3 - 0.6)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #28a745;"></div>
+            <span>Faible (< 0.3)</span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Données des restaurants
+        const markersData = [
+  {
+    "id": "demo_1",
+    "lat": 45.5088,
+    "lng": -73.5878,
+    "nom": "Restaurant Chez Mario",
+    "adresse": "123 Rue Saint-Denis, Montréal",
+    "theme": "Italien",
+    "score_risque": 0.25,
+    "categorie_risque": "Faible",
+    "probabilite_infraction": 0.15,
+    "color": "#28a745",
+    "icon": "check-circle",
+    "popup_html": "<div class=\"restaurant-popup\">\n            <h3 style=\"color: #28a745; margin: 0 0 10px 0;\">\n                <i class=\"fas fa-check-circle\"></i>\n                Restaurant Chez Mario\n            </h3>\n            <div class=\"popup-content\">\n                <p><strong>Adresse:</strong> 123 Rue Saint-Denis, Montréal</p>\n                <p><strong>Thème:</strong> Italien</p>\n                <p><strong>Catégorie de risque:</strong> \n                   <span style=\"color: #28a745; font-weight: bold;\">\n                       Faible\n                   </span>\n                </p>\n                <p><strong>Score de risque:</strong> 0.25/1.00</p>\n                <p><strong>Probabilité d'infraction:</strong> 15.0%</p>\n                <p><strong>Dernière inspection:</strong> 2024-12-15</p>\n                <p><strong>Nombre d'infractions:</strong> 0</p>\n            </div>\n            <div class=\"popup-actions\">\n                <button onclick=\"showRestaurantDetails('demo_1')\" \n                        class=\"btn btn-info btn-sm\">\n                    Détails complets\n                </button>\n                <button onclick=\"scheduleInspection('demo_1')\" \n                        class=\"btn btn-warning btn-sm\">\n                    Programmer inspection\n                </button>\n            </div>\n        </div>"
+  },
+  {
+    "id": "demo_2",
+    "lat": 45.5017,
+    "lng": -73.5673,
+    "nom": "Sushi Express",
+    "adresse": "456 Boulevard Saint-Laurent, Montréal",
+    "theme": "Asiatique",
+    "score_risque": 0.65,
+    "categorie_risque": "Modéré",
+    "probabilite_infraction": 0.45,
+    "color": "#ffc107",
+    "icon": "exclamation-triangle",
+    "popup_html": "<div class=\"restaurant-popup\">\n            <h3 style=\"color: #ffc107; margin: 0 0 10px 0;\">\n                <i class=\"fas fa-exclamation-triangle\"></i>\n                Sushi Express\n            </h3>\n            <div class=\"popup-content\">\n                <p><strong>Adresse:</strong> 456 Boulevard Saint-Laurent, Montréal</p>\n                <p><strong>Thème:</strong> Asiatique</p>\n                <p><strong>Catégorie de risque:</strong> \n                   <span style=\"color: #ffc107; font-weight: bold;\">\n                       Modéré\n                   </span>\n                </p>\n                <p><strong>Score de risque:</strong> 0.65/1.00</p>\n                <p><strong>Probabilité d'infraction:</strong> 45.0%</p>\n                <p><strong>Dernière inspection:</strong> 2024-11-20</p>\n                <p><strong>Nombre d'infractions:</strong> 2</p>\n            </div>\n            <div class=\"popup-actions\">\n                <button onclick=\"showRestaurantDetails('demo_2')\" \n                        class=\"btn btn-info btn-sm\">\n                    Détails complets\n                </button>\n                <button onclick=\"scheduleInspection('demo_2')\" \n                        class=\"btn btn-warning btn-sm\">\n                    Programmer inspection\n                </button>\n            </div>\n        </div>"
+  },
+  {
+    "id": "demo_3",
+    "lat": 45.4995,
+    "lng": -73.5848,
+    "nom": "BBQ Palace",
+    "adresse": "789 Rue Sainte-Catherine, Montréal",
+    "theme": "Américain",
+    "score_risque": 0.85,
+    "categorie_risque": "Élevé",
+    "probabilite_infraction": 0.75,
+    "color": "#fd7e14",
+    "icon": "exclamation-circle",
+    "popup_html": "<div class=\"restaurant-popup\">\n            <h3 style=\"color: #fd7e14; margin: 0 0 10px 0;\">\n                <i class=\"fas fa-exclamation-circle\"></i>\n                BBQ Palace\n            </h3>\n            <div class=\"popup-content\">\n                <p><strong>Adresse:</strong> 789 Rue Sainte-Catherine, Montréal</p>\n                <p><strong>Thème:</strong> Américain</p>\n                <p><strong>Catégorie de risque:</strong> \n                   <span style=\"color: #fd7e14; font-weight: bold;\">\n                       Élevé\n                   </span>\n                </p>\n                <p><strong>Score de risque:</strong> 0.85/1.00</p>\n                <p><strong>Probabilité d'infraction:</strong> 75.0%</p>\n                <p><strong>Dernière inspection:</strong> 2024-10-10</p>\n                <p><strong>Nombre d'infractions:</strong> 5</p>\n            </div>\n            <div class=\"popup-actions\">\n                <button onclick=\"showRestaurantDetails('demo_3')\" \n                        class=\"btn btn-info btn-sm\">\n                    Détails complets\n                </button>\n                <button onclick=\"scheduleInspection('demo_3')\" \n                        class=\"btn btn-warning btn-sm\">\n                    Programmer inspection\n                </button>\n            </div>\n        </div>"
+  },
+  {
+    "id": "demo_4",
+    "lat": 45.515,
+    "lng": -73.555,
+    "nom": "Fast Burger",
+    "adresse": "321 Avenue du Parc, Montréal",
+    "theme": "Fast Food",
+    "score_risque": 0.95,
+    "categorie_risque": "Critique",
+    "probabilite_infraction": 0.9,
+    "color": "#dc3545",
+    "icon": "times-circle",
+    "popup_html": "<div class=\"restaurant-popup\">\n            <h3 style=\"color: #dc3545; margin: 0 0 10px 0;\">\n                <i class=\"fas fa-times-circle\"></i>\n                Fast Burger\n            </h3>\n            <div class=\"popup-content\">\n                <p><strong>Adresse:</strong> 321 Avenue du Parc, Montréal</p>\n                <p><strong>Thème:</strong> Fast Food</p>\n                <p><strong>Catégorie de risque:</strong> \n                   <span style=\"color: #dc3545; font-weight: bold;\">\n                       Critique\n                   </span>\n                </p>\n                <p><strong>Score de risque:</strong> 0.95/1.00</p>\n                <p><strong>Probabilité d'infraction:</strong> 90.0%</p>\n                <p><strong>Dernière inspection:</strong> 2024-09-05</p>\n                <p><strong>Nombre d'infractions:</strong> 8</p>\n            </div>\n            <div class=\"popup-actions\">\n                <button onclick=\"showRestaurantDetails('demo_4')\" \n                        class=\"btn btn-info btn-sm\">\n                    Détails complets\n                </button>\n                <button onclick=\"scheduleInspection('demo_4')\" \n                        class=\"btn btn-warning btn-sm\">\n                    Programmer inspection\n                </button>\n            </div>\n        </div>"
+  }
+];
+        const clustersData = {
+  "Faible": {
+    "count": 1,
+    "color": "#28a745",
+    "restaurants": [
+      {
+        "id": "demo_1",
+        "lat": 45.5088,
+        "lng": -73.5878,
+        "nom": "Restaurant Chez Mario",
+        "score_risque": 0.25
+      }
+    ]
+  },
+  "Modéré": {
+    "count": 1,
+    "color": "#ffc107",
+    "restaurants": [
+      {
+        "id": "demo_2",
+        "lat": 45.5017,
+        "lng": -73.5673,
+        "nom": "Sushi Express",
+        "score_risque": 0.65
+      }
+    ]
+  },
+  "Élevé": {
+    "count": 1,
+    "color": "#fd7e14",
+    "restaurants": [
+      {
+        "id": "demo_3",
+        "lat": 45.4995,
+        "lng": -73.5848,
+        "nom": "BBQ Palace",
+        "score_risque": 0.85
+      }
+    ]
+  },
+  "Critique": {
+    "count": 1,
+    "color": "#dc3545",
+    "restaurants": [
+      {
+        "id": "demo_4",
+        "lat": 45.515,
+        "lng": -73.555,
+        "nom": "Fast Burger",
+        "score_risque": 0.95
+      }
+    ]
+  }
+};
+        const heatmapData = [
+  [
+    45.5088,
+    -73.5878,
+    0.25
+  ],
+  [
+    45.5017,
+    -73.5673,
+    0.65
+  ],
+  [
+    45.4995,
+    -73.5848,
+    0.85
+  ],
+  [
+    45.515,
+    -73.555,
+    0.95
+  ]
+];
+        
+        // Configuration de la carte
+        const mapConfig = {
+            center: [45.5017, -73.5673],
+            zoom: 11,
+            minZoom: 8,
+            maxZoom: 18
+        };
+        
+        // Initialisation de la carte
+        const map = L.map('map').setView(mapConfig.center, mapConfig.zoom);
+        
+        // Couche de tuiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors | MAPAQ Track-B',
+            minZoom: mapConfig.minZoom,
+            maxZoom: mapConfig.maxZoom
+        }).addTo(map);
+        
+        // Groupes de couches
+        const markersGroup = L.markerClusterGroup({
+            chunkedLoading: true,
+            maxClusterRadius: 50
+        });
+        const heatmapGroup = L.layerGroup();
+        
+        // Variables globales
+        let allMarkers = [];
+        let currentFilter = 'all';
+        
+        // Initialisation
+        initializeMap();
+        updateStatistics();
+        
+        function initializeMap() {
+            // Création des marqueurs
+            markersData.forEach(restaurant => {
+                const marker = createRestaurantMarker(restaurant);
+                allMarkers.push({marker: marker, data: restaurant});
+                markersGroup.addLayer(marker);
+            });
+            
+            // Ajout des groupes à la carte
+            map.addLayer(markersGroup);
+            
+            // Création de la heatmap
+            if (heatmapData.length > 0) {
+                const heatLayer = L.heatLayer(heatmapData, {
+                    radius: 25,
+                    blur: 15,
+                    maxZoom: 17,
+                    gradient: {
+                        0.0: '#28a745',
+                        0.3: '#ffc107', 
+                        0.6: '#fd7e14',
+                        0.8: '#dc3545'
+                    }
+                });
+                heatmapGroup.addLayer(heatLayer);
+            }
+        }
+        
+        function createRestaurantMarker(restaurant) {
+            // Icône personnalisée basée sur le risque
+            const icon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="
+                    background-color: ${restaurant.color};
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 50%;
+                    border: 3px solid white;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: bold;
+                    font-size: 12px;
+                ">
+                    <i class="fas fa-${restaurant.icon}"></i>
+                </div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15],
+                popupAnchor: [0, -15]
+            });
+            
+            const marker = L.marker([restaurant.lat, restaurant.lng], {icon: icon});
+            marker.bindPopup(restaurant.popup_html, {
+                maxWidth: 350,
+                className: 'custom-popup'
+            });
+            
+            return marker;
+        }
+        
+        function updateStatistics() {
+            const stats = {
+                total: markersData.length,
+                critical: markersData.filter(r => r.categorie_risque === 'Critique').length,
+                high: markersData.filter(r => r.categorie_risque === 'Élevé').length,
+                medium: markersData.filter(r => r.categorie_risque === 'Modéré').length,
+                low: markersData.filter(r => r.categorie_risque === 'Faible').length
+            };
+            
+            document.getElementById('total-count').textContent = stats.total;
+            document.getElementById('critical-count').textContent = stats.critical;
+            document.getElementById('high-count').textContent = stats.high;
+            document.getElementById('medium-count').textContent = stats.medium;
+            document.getElementById('low-count').textContent = stats.low;
+        }
+        
+        // Gestionnaires d'événements
+        document.getElementById('show-markers').addEventListener('change', function(e) {
+            if (e.target.checked) {
+                map.addLayer(markersGroup);
+            } else {
+                map.removeLayer(markersGroup);
+            }
+        });
+        
+        document.getElementById('show-clusters').addEventListener('change', function(e) {
+            // Toggle clustering
+            if (e.target.checked) {
+                markersGroup.options.disableClusteringAtZoom = null;
+            } else {
+                markersGroup.options.disableClusteringAtZoom = 1;
+            }
+            markersGroup.refreshClusters();
+        });
+        
+        document.getElementById('show-heatmap').addEventListener('change', function(e) {
+            if (e.target.checked) {
+                map.addLayer(heatmapGroup);
+            } else {
+                map.removeLayer(heatmapGroup);
+            }
+        });
+        
+        document.getElementById('risk-filter').addEventListener('change', function(e) {
+            currentFilter = e.target.value;
+            filterMarkers();
+        });
+        
+        function filterMarkers() {
+            markersGroup.clearLayers();
+            
+            const filteredMarkers = allMarkers.filter(item => {
+                if (currentFilter === 'all') return true;
+                return item.data.categorie_risque === currentFilter;
+            });
+            
+            filteredMarkers.forEach(item => {
+                markersGroup.addLayer(item.marker);
+            });
+        }
+        
+        function resetMap() {
+            map.setView(mapConfig.center, mapConfig.zoom);
+            document.getElementById('risk-filter').value = 'all';
+            currentFilter = 'all';
+            filterMarkers();
+        }
+        
+        // Fonctions pour les popups
+        function showRestaurantDetails(restaurantId) {
+            const restaurant = markersData.find(r => r.id === restaurantId);
+            if (restaurant) {
+                alert(`Détails complets pour: ${restaurant.nom}\n\nCette fonctionnalité sera intégrée au dashboard principal.`);
+            }
+        }
+        
+        function scheduleInspection(restaurantId) {
+            const restaurant = markersData.find(r => r.id === restaurantId);
+            if (restaurant) {
+                alert(`Programmer une inspection pour: ${restaurant.nom}\n\nCette fonctionnalité sera intégrée au système de gestion.`);
+            }
+        }
+        
+        
+        // ========== JAVASCRIPT RESPONSIVE ========== 
+        
+        // Variables globales responsive
+        let isMobile = window.innerWidth <= 768;
+        let isTablet = window.innerWidth <= 1024 && window.innerWidth > 768;
+        let isTouch = 'ontouchstart' in window;
+        
+        // Détection du type d'appareil
+        function detectDevice() {
+            const width = window.innerWidth;
+            isMobile = width <= 768;
+            isTablet = width <= 1024 && width > 768;
+            
+            // Mise à jour des classes CSS
+            document.body.classList.toggle('is-mobile', isMobile);
+            document.body.classList.toggle('is-tablet', isTablet);
+            document.body.classList.toggle('is-desktop', !isMobile && !isTablet);
+            document.body.classList.toggle('is-touch', isTouch);
+        }
+        
+        // Initialisation responsive
+        function initResponsive() {
+            detectDevice();
+            
+            if (isMobile) {
+                initMobileInterface();
+            }
+            
+            // Écouteur redimensionnement
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    const wasMobile = isMobile;
+                    detectDevice();
+                    
+                    // Réinitialisation si changement mobile/desktop
+                    if (wasMobile !== isMobile) {
+                        if (isMobile) {
+                            initMobileInterface();
+                        } else {
+                            initDesktopInterface();
+                        }
+                        
+                        // Redimensionnement carte
+                        setTimeout(() => {
+                            map.invalidateSize();
+                        }, 300);
+                    }
+                }, 250);
+            });
+        }
+        
+        // Interface mobile
+        function initMobileInterface() {
+            // Création du menu hamburger
+            createHamburgerMenu();
+            
+            // Réorganisation des panneaux
+            reorganizePanelsForMobile();
+            
+            // Optimisation des popups
+            optimizePopupsForMobile();
+            
+            // Gestion tactile
+            enableTouchOptimizations();
+        }
+        
+        // Interface desktop
+        function initDesktopInterface() {
+            // Suppression éléments mobiles
+            removeHamburgerMenu();
+            
+            // Restauration panneaux desktop
+            restoreDesktopPanels();
+        }
+        
+        // Création menu hamburger
+        function createHamburgerMenu() {
+            // Vérification existence
+            if (document.querySelector('.hamburger-menu')) return;
+            
+            // Bouton hamburger
+            const hamburger = document.createElement('button');
+            hamburger.className = 'hamburger-menu';
+            hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+            hamburger.setAttribute('aria-label', 'Menu');
+            
+            // Menu coulissant
+            const mobileMenu = document.createElement('div');
+            mobileMenu.className = 'mobile-menu';
+            mobileMenu.innerHTML = `
+                <button class="close-menu" aria-label="Fermer menu">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div id="mobile-menu-content"></div>
+            `;
+            
+            // Overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'mobile-menu-overlay';
+            
+            // Ajout au DOM
+            document.body.appendChild(hamburger);
+            document.body.appendChild(mobileMenu);
+            document.body.appendChild(overlay);
+            
+            // Déplacement du contenu
+            const statsPanel = document.querySelector('.stats-panel');
+            const controlsPanel = document.querySelector('.map-controls');
+            const legend = document.querySelector('.legend');
+            
+            const menuContent = document.getElementById('mobile-menu-content');
+            if (statsPanel) menuContent.appendChild(statsPanel.cloneNode(true));
+            if (controlsPanel) menuContent.appendChild(controlsPanel.cloneNode(true));
+            if (legend) menuContent.appendChild(legend.cloneNode(true));
+            
+            // Événements
+            hamburger.addEventListener('click', toggleMobileMenu);
+            overlay.addEventListener('click', closeMobileMenu);
+            mobileMenu.querySelector('.close-menu').addEventListener('click', closeMobileMenu);
+            
+            // Réattachement des événements
+            reattachEventListeners(menuContent);
+        }
+        
+        // Toggle menu mobile
+        function toggleMobileMenu() {
+            const menu = document.querySelector('.mobile-menu');
+            const overlay = document.querySelector('.mobile-menu-overlay');
+            
+            menu.classList.toggle('active');
+            overlay.classList.toggle('active');
+            
+            // Prévention scroll body
+            document.body.style.overflow = menu.classList.contains('active') ? 'hidden' : '';
+        }
+        
+        // Fermeture menu mobile
+        function closeMobileMenu() {
+            const menu = document.querySelector('.mobile-menu');
+            const overlay = document.querySelector('.mobile-menu-overlay');
+            
+            menu.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // Suppression menu hamburger
+        function removeHamburgerMenu() {
+            const elements = ['.hamburger-menu', '.mobile-menu', '.mobile-menu-overlay'];
+            elements.forEach(selector => {
+                const element = document.querySelector(selector);
+                if (element) element.remove();
+            });
+        }
+        
+        // Réorganisation panneaux mobile
+        function reorganizePanelsForMobile() {
+            const panels = document.querySelectorAll('.map-panel');
+            panels.forEach(panel => {
+                panel.style.position = 'relative';
+                panel.style.top = 'auto';
+                panel.style.left = 'auto';
+                panel.style.right = 'auto';
+                panel.style.bottom = 'auto';
+            });
+        }
+        
+        // Restauration panneaux desktop
+        function restoreDesktopPanels() {
+            const statsPanel = document.querySelector('.stats-panel');
+            const controlsPanel = document.querySelector('.map-controls');
+            const legend = document.querySelector('.legend');
+            
+            if (statsPanel) {
+                statsPanel.style.position = 'absolute';
+                statsPanel.style.top = '10px';
+                statsPanel.style.left = '10px';
+            }
+            
+            if (controlsPanel) {
+                controlsPanel.style.position = 'absolute';
+                controlsPanel.style.top = '10px';
+                controlsPanel.style.right = '10px';
+            }
+            
+            if (legend) {
+                legend.style.position = 'absolute';
+                legend.style.bottom = '20px';
+                legend.style.left = '20px';
+            }
+        }
+        
+        // Optimisation popups mobile
+        function optimizePopupsForMobile() {
+            // Réduction taille popups
+            const style = document.createElement('style');
+            style.textContent = `
+                @media (max-width: 768px) {
+                    .leaflet-popup-content-wrapper {
+                        max-width: 250px !important;
+                        font-size: 12px;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Optimisations tactiles
+        function enableTouchOptimizations() {
+            if (!isTouch) return;
+            
+            // Désactivation hover sur tactile
+            const style = document.createElement('style');
+            style.textContent = `
+                @media (hover: none) {
+                    .btn:hover {
+                        transform: none;
+                        box-shadow: initial;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Gestion double-tap
+            let lastTap = 0;
+            document.addEventListener('touchend', function(e) {
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTap;
+                
+                if (tapLength < 500 && tapLength > 0) {
+                    // Double tap détecté
+                    e.preventDefault();
+                    
+                    // Zoom sur la carte
+                    if (e.target.closest('#map')) {
+                        map.zoomIn();
+                    }
+                }
+                lastTap = currentTime;
+            });
+        }
+        
+        // Réattachement événements
+        function reattachEventListeners(container) {
+            // Marqueurs
+            const showMarkersCheckbox = container.querySelector('#show-markers');
+            if (showMarkersCheckbox) {
+                showMarkersCheckbox.addEventListener('change', function(e) {
+                    if (e.target.checked) {
+                        map.addLayer(markersGroup);
+                    } else {
+                        map.removeLayer(markersGroup);
+                    }
+                });
+            }
+            
+            // Clusters
+            const showClustersCheckbox = container.querySelector('#show-clusters');
+            if (showClustersCheckbox) {
+                showClustersCheckbox.addEventListener('change', function(e) {
+                    if (e.target.checked) {
+                        markersGroup.options.disableClusteringAtZoom = null;
+                    } else {
+                        markersGroup.options.disableClusteringAtZoom = 1;
+                    }
+                    markersGroup.refreshClusters();
+                });
+            }
+            
+            // Heatmap
+            const showHeatmapCheckbox = container.querySelector('#show-heatmap');
+            if (showHeatmapCheckbox) {
+                showHeatmapCheckbox.addEventListener('change', function(e) {
+                    if (e.target.checked) {
+                        map.addLayer(heatmapGroup);
+                    } else {
+                        map.removeLayer(heatmapGroup);
+                    }
+                });
+            }
+            
+            // Filtre risque
+            const riskFilter = container.querySelector('#risk-filter');
+            if (riskFilter) {
+                riskFilter.addEventListener('change', function(e) {
+                    currentFilter = e.target.value;
+                    filterMarkers();
+                });
+            }
+        }
+        
+        // Gestion orientation
+        function handleOrientationChange() {
+            setTimeout(() => {
+                detectDevice();
+                map.invalidateSize();
+                
+                // Réajustement interface
+                if (isMobile) {
+                    // Fermeture menu si ouvert
+                    closeMobileMenu();
+                }
+            }, 500);
+        }
+        
+        // Écouteur orientation
+        window.addEventListener('orientationchange', handleOrientationChange);
+        
+        // Performance - Debounce scroll
+        let scrollTimer;
+        function debounceScroll(func, wait) {
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(scrollTimer);
+                    func(...args);
+                };
+                clearTimeout(scrollTimer);
+                scrollTimer = setTimeout(later, wait);
+            };
+        }
+        
+        // Optimisation performance mobile
+        function optimizePerformance() {
+            if (isMobile) {
+                // Réduction qualité rendu sur mobile
+                map.options.preferCanvas = true;
+                
+                // Limitation nombre marqueurs visibles
+                if (markersData.length > 50) {
+                    console.log('Optimisation mobile: limitation marqueurs');
+                }
+            }
+        }
+        
+        // Initialisation au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            initResponsive();
+            optimizePerformance();
+        });
+        
+    </script>
+</body>
+</html>
+        
