@@ -1,87 +1,176 @@
-
-        <!DOCTYPE html>
-        <html lang="fr">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Dashboard MAPAQ - Prédiction Risques Sanitaires</title>
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-            <style>
-                .stat-card { border-left: 4px solid #007bff; }
-                .trend-up { color: #28a745; }
-                .trend-down { color: #dc3545; }
-                .trend-neutral { color: #6c757d; }
-                .stat-icon { font-size: 2rem; opacity: 0.7; }
-                .interactive-table { max-height: 400px; overflow-y: auto; }
-                .chart-container { position: relative; height: 300px; }
-            </style>
-        </head>
-        <body>
-            <div class="container-fluid">
-                <header class="py-3 mb-4 border-bottom">
-                    <h1 class="h3">🏥 Dashboard MAPAQ - Prédiction Risques Sanitaires</h1>
-                    <p class="text-muted">Surveillance et analyse prédictive des restaurants</p>
-                </header>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard MAPAQ Interactif - Système Prédictif de Risques</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #2C3E50;
+            --danger-color: #E74C3C;
+            --warning-color: #F39C12;
+            --success-color: #27AE60;
+            --info-color: #3498DB;
+            --bg-light: #ECF0F1;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            padding-top: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #34495E 100%);
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .stat-card {
+            border: none;
+            border-radius: 15px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 20px;
+            background: white;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .stat-icon { font-size: 3rem; opacity: 0.8; }
+        .stat-value { font-size: 2.5rem; font-weight: 700; margin: 10px 0; }
+        .trend-up { color: var(--danger-color); }
+        .trend-down { color: var(--success-color); }
+        .trend-neutral { color: var(--info-color); }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        
+        .table thead {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .table thead th {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .badge-critique { background-color: var(--danger-color); color: white; padding: 8px 15px; border-radius: 20px; }
+        .badge-eleve { background-color: var(--warning-color); color: white; padding: 8px 15px; border-radius: 20px; }
+        .badge-moyen { background-color: var(--info-color); color: white; padding: 8px 15px; border-radius: 20px; }
+        .badge-faible { background-color: var(--success-color); color: white; padding: 8px 15px; border-radius: 20px; }
+        
+        .btn-view-details {
+            background: var(--info-color);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading i {
+            font-size: 3rem;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .chart-container { position: relative; height: 300px; padding: 20px; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1><i class="fas fa-chart-line"></i> Dashboard MAPAQ Interactif</h1>
+                    <p>Système Prédictif de Risques Sanitaires - Surveillance en Temps Réel</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-light btn-lg" onclick="refreshAllData()">
+                        <i class="fas fa-sync-alt"></i> Actualiser
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
                 
-                
-        <div class="row mb-4">
+        <!-- Statistiques principales -->
+        <div class="row" id="statsContainer">
             <div class="col-md-3">
-        <div id="stat_total" class="card shadow-sm stat-card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-subtitle text-muted">Total Restaurants</h6>
-                        <h3 class="card-title">25</h3>
-                        <small class="trend-up">↗ +5 ce mois</small>
+                <div class="stat-card">
+                    <div class="card-body text-center">
+                        <div class="stat-icon">🏪</div>
+                        <div class="stat-label">Total Restaurants</div>
+                        <div class="stat-value" id="totalRestaurants">-</div>
                     </div>
-                    <div class="stat-icon">🏪</div>
                 </div>
             </div>
-        </div>
-        </div>
             <div class="col-md-3">
-        <div id="stat_score" class="card shadow-sm stat-card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-subtitle text-muted">Score Moyen</h6>
-                        <h3 class="card-title">58.3/100</h3>
-                        <small class="trend-down">↘ -2.3 points</small>
+                <div class="stat-card">
+                    <div class="card-body text-center">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-label">Score Moyen</div>
+                        <div class="stat-value" id="scoreMoyen">-</div>
+                        <small class="trend-down" id="scoreTrend"></small>
                     </div>
-                    <div class="stat-icon">📊</div>
                 </div>
             </div>
-        </div>
-        </div>
             <div class="col-md-3">
-        <div id="stat_risk" class="card shadow-sm stat-card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-subtitle text-muted">Risque Élevé</h6>
-                        <h3 class="card-title">8</h3>
-                        <small class="trend-up">↗ +2 cette semaine</small>
+                <div class="stat-card">
+                    <div class="card-body text-center">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-label">Risque Élevé</div>
+                        <div class="stat-value" id="risqueEleve">-</div>
                     </div>
-                    <div class="stat-icon">⚠️</div>
                 </div>
             </div>
-        </div>
-        </div>
             <div class="col-md-3">
-        <div id="stat_critical" class="card shadow-sm stat-card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-subtitle text-muted">Critique</h6>
-                        <h3 class="card-title">3</h3>
-                        <small class="trend-neutral">→ Inspection urgente</small>
+                <div class="stat-card">
+                    <div class="card-body text-center">
+                        <div class="stat-icon">🚨</div>
+                        <div class="stat-label">Critique</div>
+                        <div class="stat-value" id="critique">-</div>
+                        <small class="trend-neutral">Inspection urgente</small>
                     </div>
-                    <div class="stat-icon">🚨</div>
                 </div>
             </div>
-        </div>
-        </div>
         </div>
         
                 
@@ -164,38 +253,220 @@
         
             </div>
             
+            <!-- Bootstrap JS -->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            
             <script>
-                // Fonctions JavaScript pour l'interactivité
-                function filterTable(tableId, searchValue) {
-                    const table = document.getElementById(tableId);
-                    const rows = table.getElementsByTagName('tr');
+                // Configuration API
+                const API_BASE_URL = 'http://127.0.0.1:5000/api/v1';
+                
+                // Variables globales
+                let allRestaurants = [];
+                let distributionChart = null;
+                let trendsChart = null;
+                
+                // Initialisation au chargement
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('🚀 Initialisation du dashboard...');
+                    initDashboard();
                     
-                    for (let i = 1; i < rows.length; i++) {
-                        const row = rows[i];
-                        const cells = row.getElementsByTagName('td');
-                        let found = false;
-                        
-                        for (let j = 0; j < cells.length; j++) {
-                            if (cells[j].textContent.toLowerCase().includes(searchValue.toLowerCase())) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        
-                        row.style.display = found ? '' : 'none';
+                    // Auto-refresh toutes les 30 secondes
+                    setInterval(refreshAllData, 30000);
+                });
+                
+                // Initialisation du dashboard
+                async function initDashboard() {
+                    try {
+                        await loadDashboardData();
+                        await loadRestaurants();
+                        await loadCharts();
+                        console.log('✅ Dashboard initialisé avec succès');
+                    } catch (error) {
+                        console.error('❌ Erreur initialisation:', error);
                     }
                 }
                 
-                function refreshTable() {
-                    location.reload();
+                // Chargement des statistiques du dashboard
+                async function loadDashboardData() {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/dashboard`);
+                        const data = await response.json();
+                        
+                        document.getElementById('totalRestaurants').textContent = data.stats.total_restaurants;
+                        document.getElementById('scoreMoyen').textContent = data.stats.score_moyen + '/100';
+                        document.getElementById('risqueEleve').textContent = data.stats.risque_eleve;
+                        document.getElementById('critique').textContent = data.stats.critique;
+                        
+                        const trend = data.stats.trend;
+                        const trendElement = document.getElementById('scoreTrend');
+                        if (trend > 0) {
+                            trendElement.className = 'trend-up';
+                            trendElement.textContent = `↗ +${trend.toFixed(1)} points`;
+                        } else if (trend < 0) {
+                            trendElement.className = 'trend-down';
+                            trendElement.textContent = `↘ ${trend.toFixed(1)} points`;
+                        } else {
+                            trendElement.className = 'trend-neutral';
+                            trendElement.textContent = '→ Stable';
+                        }
+                    } catch (error) {
+                        console.error('Erreur chargement dashboard:', error);
+                    }
                 }
                 
-                // Auto-refresh toutes les 30 secondes
-                setInterval(() => {
-                    console.log('Auto-refresh dashboard...');
-                    // Ici on pourrait faire des appels AJAX pour mettre à jour les données
-                }, 30000);
+                // Chargement des restaurants
+                async function loadRestaurants() {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/restaurants`);
+                        const data = await response.json();
+                        
+                        allRestaurants = data.restaurants;
+                        displayRestaurants(allRestaurants);
+                    } catch (error) {
+                        console.error('Erreur chargement restaurants:', error);
+                    }
+                }
+                
+                // Affichage des restaurants dans le tableau
+                function displayRestaurants(restaurants) {
+                    const tbody = document.querySelector('#restaurants_table_table tbody');
+                    
+                    if (restaurants.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Aucun restaurant trouvé</td></tr>';
+                        return;
+                    }
+                    
+                    tbody.innerHTML = restaurants.map(resto => `
+                        <tr>
+                            <td><strong>${resto.nom}</strong><br><small class="text-muted">${resto.theme || 'N/A'}</small></td>
+                            <td>${resto.zone || 'N/A'}</td>
+                            <td><strong style="color: ${getScoreColor(resto.score_risque)}">${resto.score_risque}/100</strong></td>
+                            <td><span class="badge-${resto.categorie_risque}">${getCategorieLabel(resto.categorie_risque)}</span></td>
+                            <td>${formatDate(resto.derniere_inspection)}</td>
+                            <td><button class="btn btn-view-details btn-sm" onclick="alert('Détails: ${resto.nom}')"><i class="fas fa-eye"></i></button></td>
+                        </tr>
+                    `).join('');
+                }
+                
+                // Chargement des graphiques
+                async function loadCharts() {
+                    await loadDistributionChart();
+                    await loadTrendsChart();
+                }
+                
+                // Graphique de distribution
+                async function loadDistributionChart() {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/charts/distribution`);
+                        const data = await response.json();
+                        
+                        const ctx = document.getElementById('risk_distribution_chart_canvas').getContext('2d');
+                        
+                        if (distributionChart) {
+                            distributionChart.destroy();
+                        }
+                        
+                        distributionChart = new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: data.labels,
+                                datasets: [{
+                                    data: data.data,
+                                    backgroundColor: data.backgroundColor,
+                                    borderWidth: 2,
+                                    borderColor: '#fff'
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { position: 'bottom' },
+                                    title: { display: true, text: 'Distribution des Catégories de Risque' }
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Erreur chargement graphique distribution:', error);
+                    }
+                }
+                
+                // Graphique de tendances
+                async function loadTrendsChart() {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/charts/trends?period=month`);
+                        const data = await response.json();
+                        
+                        const ctx = document.getElementById('trends_chart_canvas').getContext('2d');
+                        
+                        if (trendsChart) {
+                            trendsChart.destroy();
+                        }
+                        
+                        trendsChart = new Chart(ctx, {
+                            type: 'line',
+                            data: data,
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { position: 'bottom' },
+                                    title: { display: true, text: 'Évolution des Scores de Risque' }
+                                },
+                                scales: {
+                                    y: { beginAtZero: true, max: 100 }
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Erreur chargement graphique tendances:', error);
+                    }
+                }
+                
+                // Actualisation complète
+                async function refreshAllData() {
+                    console.log('🔄 Actualisation des données...');
+                    await loadDashboardData();
+                    await loadRestaurants();
+                    await loadCharts();
+                    console.log('✅ Données actualisées');
+                }
+                
+                // Fonctions utilitaires
+                function getScoreColor(score) {
+                    if (score >= 80) return '#E74C3C';
+                    if (score >= 60) return '#F39C12';
+                    if (score >= 40) return '#3498DB';
+                    return '#27AE60';
+                }
+                
+                function getCategorieLabel(categorie) {
+                    const labels = {
+                        'critique': 'Critique',
+                        'eleve': 'Élevé',
+                        'moyen': 'Moyen',
+                        'faible': 'Faible'
+                    };
+                    return labels[categorie] || categorie;
+                }
+                
+                function formatDate(dateStr) {
+                    if (!dateStr) return 'N/A';
+                    const date = new Date(dateStr);
+                    return date.toLocaleDateString('fr-CA');
+                }
+                
+                function filterTable(tableId, searchValue) {
+                    const filtered = allRestaurants.filter(r => {
+                        const searchable = `${r.nom} ${r.zone} ${r.theme} ${r.adresse}`.toLowerCase();
+                        return searchable.includes(searchValue.toLowerCase());
+                    });
+                    displayRestaurants(filtered);
+                }
+                
+                function refreshTable() {
+                    loadRestaurants();
+                }
             </script>
         </body>
         </html>
-        
