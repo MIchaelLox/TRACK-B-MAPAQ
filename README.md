@@ -89,31 +89,10 @@ Visualization
   - Design responsive et moderne
   - Appels AJAX pour chargement des données
 
-### Script de Démarrage
-
-- Script batch pour lancer facilement le dashboard.
-  
-  --> /lancer_dashboard_interactif.bat
-
-### Documentation
-
-- Guide complet d'utilisation du dashboard interactif.
-  
-  --> /README_DASHBOARD_INTERACTIF.md
-  
-  **Contenu :**
-  - Instructions d'installation
-  - Documentation API complète
-  - Guide de dépannage
-  - Instructions de déploiement
-
 ### Utilisation Rapide
 
 ```bash
-# Méthode 1 : Double-cliquer sur
-lancer_dashboard_interactif.bat
-
-# Méthode 2 : Ligne de commande
+# Démarrer le serveur Flask
 python app_server.py
 
 # Puis ouvrir dans le navigateur
@@ -130,3 +109,202 @@ http://127.0.0.1:5000
 - `GET /api/v1/zones` - Liste des zones disponibles
 - `POST /api/v1/predict` - Prédiction de risque
 - `GET /api/health` - Health check du serveur
+
+---
+
+## 🔄 Pipeline de Données ETL (Ajouté par Grace MANDIANGU)
+
+### Pipeline Automatisé Complet
+
+- Pipeline ETL pour traitement automatisé des données d'inspection MAPAQ.
+  
+  --> /data_pipeline.py
+  
+  **Étapes du Pipeline :**
+  1. **Ingestion** - Chargement des données brutes (CSV, API, base de données)
+  2. **Nettoyage** - Normalisation, suppression des doublons, gestion des valeurs manquantes
+  3. **Enrichissement** - Géocodage, détection de thèmes, ajout de métadonnées
+  4. **Modélisation** - Calcul des scores de risque et prédictions
+  5. **Validation** - Contrôle qualité avec règles de validation
+  6. **Sauvegarde** - Insertion/mise à jour dans la base de données SQLite
+  
+  **Fonctionnalités :**
+  - Gestion d'erreurs avec retry automatique (3 tentatives)
+  - Logging détaillé de chaque étape
+  - Métriques d'exécution (durée, enregistrements traités)
+  - Backup automatique de la base de données
+  - Traitement par lots (batch processing)
+
+### Scheduler d'Exécution Automatique
+
+- Planificateur pour exécution périodique du pipeline.
+  
+  --> /pipeline_scheduler.py
+  
+  **Modes d'Exécution :**
+  - **Quotidien** - Exécution à heure fixe (ex: 02:00)
+  - **Horaire** - Exécution toutes les heures
+  - **Intervalle** - Exécution à intervalle personnalisé (ex: 30 minutes)
+  - **Immédiat** - Exécution unique sur demande
+  
+  **Utilisation :**
+  ```bash
+  python pipeline_scheduler.py
+  # Puis choisir l'option souhaitée (1-4)
+  ```
+
+### Module de Validation des Données
+
+- Validateur avec règles configurables pour contrôle qualité.
+  
+  --> /data_validator.py
+  
+  **Types de Validation :**
+  - Champs obligatoires (nom, adresse, score)
+  - Plages de valeurs (score: 0-100, probabilité: 0-1)
+  - Énumérations (catégories de risque, tailles)
+  - Formats de dates (YYYY-MM-DD)
+  
+  **Niveaux de Sévérité :**
+  - **Erreur** - Bloque l'enregistrement
+  - **Avertissement** - Signale mais accepte l'enregistrement
+  
+  **Rapport de Validation :**
+  - Taux de validation
+  - Résumé des erreurs par type
+  - Liste des enregistrements invalides
+
+### Interface CLI pour le Pipeline
+
+- Script en ligne de commande pour lancer le pipeline facilement.
+  
+  --> /run_pipeline.py
+  
+  **Modes d'Utilisation :**
+  
+  ```bash
+  # Mode interactif (avec questions)
+  python run_pipeline.py
+  
+  # Mode CLI avec options
+  python run_pipeline.py --source data/raw/inspections.csv --output mapaq.db
+  
+  # Avec génération de rapport
+  python run_pipeline.py --report rapport_pipeline.json
+  
+  # Désactiver les backups
+  python run_pipeline.py --no-backup
+  ```
+  
+  **Options Disponibles :**
+  - `--source` : Chemin du fichier source
+  - `--output` : Chemin de la base de données
+  - `--backup` / `--no-backup` : Activer/désactiver les backups
+  - `--report` : Générer un rapport JSON
+  - `--interactive` : Mode interactif
+
+### Architecture du Pipeline
+
+```
+┌─────────────────┐
+│  Données Brutes │ (CSV, API, DB)
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│   Ingestion     │ → Chargement des données
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│   Nettoyage     │ → Normalisation, validation basique
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Enrichissement  │ → Géocodage, thèmes, métadonnées
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Modélisation   │ → Scores de risque, prédictions
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│   Validation    │ → Contrôle qualité, règles métier
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│   Sauvegarde    │ → Base de données SQLite
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│   Dashboard     │ → Visualisation temps réel
+└─────────────────┘
+```
+
+### Exécution Complète du Pipeline
+
+**Étape 1 : Exécution Manuelle**
+```bash
+# Lancer le pipeline une fois
+python run_pipeline.py
+
+# Ou avec options spécifiques
+python run_pipeline.py --source data/raw/mapaq_data.csv --report rapport.json
+```
+
+**Étape 2 : Automatisation avec Scheduler**
+```bash
+# Lancer le scheduler
+python pipeline_scheduler.py
+
+# Choisir l'option:
+# 1 = Quotidien à 02:00
+# 2 = Toutes les heures
+# 3 = Toutes les 30 minutes
+# 4 = Exécution immédiate
+```
+
+**Étape 3 : Visualisation**
+```bash
+# Démarrer le dashboard pour voir les résultats
+python app_server.py
+
+# Ouvrir http://127.0.0.1:5000
+```
+
+### Logs et Monitoring
+
+Le pipeline génère automatiquement :
+- **pipeline.log** - Logs détaillés de chaque exécution
+- **data/backups/** - Backups de la base de données
+- **Rapports JSON** - Métriques et statistiques d'exécution
+
+### Gestion des Erreurs
+
+Le pipeline inclut :
+- ✅ Retry automatique (3 tentatives par étape)
+- ✅ Rollback en cas d'erreur de sauvegarde
+- ✅ Logs détaillés pour debugging
+- ✅ Continuation partielle (traite ce qui est valide)
+- ✅ Notifications d'erreurs critiques
+
+### Configuration
+
+Le pipeline utilise des valeurs par défaut mais peut être configuré :
+
+```python
+from data_pipeline import PipelineConfig
+
+config = PipelineConfig(
+    source_data_path="data/raw/inspections.csv",
+    output_db_path="mapaq_dashboard.db",
+    backup_enabled=True,
+    max_retries=3,
+    batch_size=100
+)
+```
