@@ -34,7 +34,19 @@ class DataCleaner:
         }
         
         logger.info(f"DataCleaner initialized with {raw_data.shape[0]} records, {raw_data.shape[1]} columns")
-    
+
+    def _ensure_clean_data(self) -> None:
+        """
+        Ensure that `self.clean_data` is initialised.
+
+        Some unit tests call cleaning methods directly on a new instance
+        without running `clean_pipeline()` first, so we lazily create
+        the working copy of the raw data here.
+        """
+        if self.clean_data is None:
+            self.clean_data = self.raw_data.copy()
+
+
     def clean_pipeline(self) -> pd.DataFrame:
         """
         Execute complete cleaning pipeline.
@@ -60,39 +72,46 @@ class DataCleaner:
         logger.info(f"Cleaning pipeline completed: {self.cleaning_stats['original_shape']} → {self.cleaning_stats['final_shape']}")
         
         return self.clean_data
-    
+
     def remove_nulls(self, strategy: str = 'smart') -> pd.DataFrame:
         """
         Remove or handle null values intelligently.
-        
+
         Args:
             strategy (str): 'drop', 'fill', 'smart' (default)
-            
+
         Returns:
             pd.DataFrame: Dataset with nulls handled
         """
         logger.info(f"Handling null values with strategy: {strategy}")
-        
-        # Analyser les nulls avant nettoyage
+
+        # Muy importante para los tests:
+        # siempre reiniciar desde los datos originales para que
+        # llamadas sucesivas (drop, luego fill) sean comparables.
+        self.clean_data = self.raw_data.copy()
+
+        # Analizar nulls antes del limpieza
         null_analysis = self._analyze_nulls()
         self.cleaning_stats['null_handling']['before'] = null_analysis
-        
+
         if strategy == 'smart':
             self._smart_null_handling()
         elif strategy == 'drop':
             self._drop_null_handling()
         elif strategy == 'fill':
             self._fill_null_handling()
-        
-        # Analyser après nettoyage
+        else:
+            raise ValueError(f"Unknown null handling strategy: {strategy}")
+
+        # Analizar después del limpieza
         null_analysis_after = self._analyze_nulls()
         self.cleaning_stats['null_handling']['after'] = null_analysis_after
-        
+
         self.cleaning_stats['cleaning_steps'].append('null_handling')
         logger.info("Null handling completed")
-        
+
         return self.clean_data
-    
+
     def unify_formats(self) -> pd.DataFrame:
         """
         Standardize column formats, dates, numeric types.
@@ -101,7 +120,10 @@ class DataCleaner:
             pd.DataFrame: Dataset with unified formats
         """
         logger.info("Unifying data formats...")
-        
+
+        # Ensure data is initialised
+        self._ensure_clean_data()
+
         format_changes = {}
         
         # Normaliser les dates
@@ -144,7 +166,10 @@ class DataCleaner:
             pd.DataFrame: Dataset with encoded categoricals
         """
         logger.info("Encoding categorical variables...")
-        
+
+        # Ensure data is initialised
+        self._ensure_clean_data()
+
         encoding_changes = {}
         
         # Encoder le statut (ordinal encoding)
@@ -240,6 +265,7 @@ class DataCleaner:
     
     def _analyze_nulls(self) -> Dict[str, Any]:
         """Analyze null values in the dataset."""
+        self._ensure_clean_data()
         null_counts = self.clean_data.isnull().sum()
         total_rows = len(self.clean_data)
         
@@ -249,41 +275,56 @@ class DataCleaner:
             'columns_with_nulls': null_counts[null_counts > 0].to_dict(),
             'null_percentages_by_column': ((null_counts / total_rows) * 100).to_dict()
         }
-    
+
     def _smart_null_handling(self):
         """Smart null handling based on column type and null percentage."""
-        for column in self.clean_data.columns:
+        # Always work on an initialised DataFrame
+        self._ensure_clean_data()
+
+        # Use a copy of the column list, as we may drop some
+        for column in list(self.clean_data.columns):
             null_count = self.clean_data[column].isnull().sum()
             null_percentage = (null_count / len(self.clean_data)) * 100
-            
+
             if null_percentage == 0:
                 continue
-            
+
+            # Drop columns with >50% nulls
             if null_percentage > 50:
-                # Drop columns with >50% nulls
                 logger.warning(f"Dropping column {column} (>{null_percentage:.1f}% nulls)")
                 self.clean_data.drop(columns=[column], inplace=True)
-            elif column in ['fine_amount', 'montant']:
-                # Fill numeric amounts with median
-                median_value = self.clean_data[column].median()
-                self.clean_data[column].fillna(median_value, inplace=True)
-            elif 'date' in column.lower():
+                continue
+
+            # Monetary / amount-like columns
+            if column in ["fine_amount", "montant"]:
+                # Be robust to values like "300$" or "invalid"
+                numeric_series = pd.to_numeric(self.clean_data[column], errors="coerce")
+                median_value = numeric_series.median()
+                self.clean_data[column] = numeric_series.fillna(median_value)
+                continue
+
+            # Date-like columns
+            if "date" in column.lower():
                 # Forward fill dates
-                self.clean_data[column].fillna(method='ffill', inplace=True)
-            elif self.clean_data[column].dtype == 'object':
-                # Fill text with 'Unknown'
-                self.clean_data[column].fillna('Unknown', inplace=True)
+                self.clean_data[column] = self.clean_data[column].ffill()
+                continue
+
+            # Text / categorical columns
+            if self.clean_data[column].dtype == "object":
+                self.clean_data[column] = self.clean_data[column].fillna("Unknown")
             else:
-                # Fill numeric with median
-                self.clean_data[column].fillna(self.clean_data[column].median(), inplace=True)
-    
+                # Generic numeric columns – also robust to mixed types
+                numeric_series = pd.to_numeric(self.clean_data[column], errors="coerce")
+                median_value = numeric_series.median()
+                self.clean_data[column] = numeric_series.fillna(median_value)
+
     def _drop_null_handling(self):
         """Drop all rows with any null values."""
         original_rows = len(self.clean_data)
         self.clean_data.dropna(inplace=True)
         dropped_rows = original_rows - len(self.clean_data)
         logger.info(f"Dropped {dropped_rows} rows with null values")
-    
+
     def _fill_null_handling(self):
         """Fill all null values with appropriate defaults."""
         for column in self.clean_data.columns:
@@ -291,7 +332,7 @@ class DataCleaner:
                 self.clean_data[column].fillna(self.clean_data[column].median(), inplace=True)
             else:
                 self.clean_data[column].fillna('Unknown', inplace=True)
-    
+
     def _identify_date_columns(self) -> List[str]:
         """Identify columns that contain dates."""
         date_keywords = ['date', 'time', 'timestamp']

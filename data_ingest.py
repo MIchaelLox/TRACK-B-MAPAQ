@@ -1,4 +1,3 @@
-
 import pandas as pd
 import requests
 import os
@@ -28,7 +27,7 @@ class DataIngestor:
     def __init__(self, source_path: Optional[str] = None, auto_download: bool = True):
         """
         Initialize DataIngestor with source path or API endpoint.
-        
+
         Args:
             source_path (str, optional): Path to CSV file or API endpoint URL
             auto_download (bool): Automatically download from MAPAQ API if no source provided
@@ -36,14 +35,20 @@ class DataIngestor:
         self.source_path = source_path or DataSources.RAW_DATA
         self.auto_download = auto_download
         self.raw_data = None
-        self.download_cache = DataSources.CACHE_DIR / "download_cache.json"
-        
+
+        # Some test environments use a simplified DataSources without CACHE_DIR.
+        # Fall back to a local "data/cache" directory in that case.
+        cache_dir = getattr(DataSources, "CACHE_DIR", Path("data/cache"))
+        if isinstance(cache_dir, str):
+            cache_dir = Path(cache_dir)
+        self.download_cache = cache_dir / "download_cache.json"
+
         # Statistiques de téléchargement
         self.download_stats = {
-            'last_download': None,
-            'records_downloaded': 0,
-            'download_duration': 0,
-            'source_used': None
+            "last_download": None,
+            "records_downloaded": 0,
+            "download_duration": 0,
+            "source_used": None,
         }
         
     def load_raw_data(self) -> pd.DataFrame:
@@ -95,18 +100,36 @@ class DataIngestor:
     def _is_csv_file(self, path: str) -> bool:
         """Check if path is a CSV file."""
         return path.endswith('.csv') and os.path.exists(path)
-    
+
+    def load_from_csv(self, csv_path: Optional[str] = None) -> pd.DataFrame:
+        """
+        Public helper to load data explicitly from a CSV file.
+
+        This is a thin wrapper around the internal `_load_from_csv` method
+        and is used by some integration tests.
+
+        Args:
+            csv_path (str, optional): Path to a CSV file. If not provided,
+                the current `self.source_path` is used.
+
+        Returns:
+            pd.DataFrame: Data loaded from the CSV file.
+        """
+        if csv_path is not None:
+            self.source_path = csv_path
+        return self._load_from_csv()
+
     def _load_from_csv(self) -> pd.DataFrame:
         """
-        Load data from CSV file.
-        
+        Internal helper to load data from CSV using the current source_path.
+
         Returns:
-            pd.DataFrame: Data loaded from CSV
+            pd.DataFrame: Data loaded from CSV.
         """
         try:
-            # Essayer différents encodages
-            encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
-            
+            # Try different encodings
+            encodings = ["utf-8", "latin-1", "cp1252", "iso-8859-1"]
+
             for encoding in encodings:
                 try:
                     df = pd.read_csv(self.source_path, encoding=encoding)
@@ -114,50 +137,29 @@ class DataIngestor:
                     return df
                 except UnicodeDecodeError:
                     continue
-            
-            # Si aucun encodage ne fonctionne
+
+            # If no encoding works
             raise ValueError("Unable to decode CSV file with any standard encoding")
-            
+
         except Exception as e:
             logger.error(f"Error loading CSV: {str(e)}")
             raise
-    
-    def _load_from_url(self) -> pd.DataFrame:
+
+    def load_from_url(self, url: Optional[str] = None) -> pd.DataFrame:
         """
-        Load data from URL (API endpoint or direct CSV link).
-        
+        Public helper to load data explicitly from an HTTP/HTTPS URL.
+
+        Args:
+            url (str, optional): HTTP/HTTPS URL. If not provided,
+                the current `self.source_path` is used.
+
         Returns:
-            pd.DataFrame: Data loaded from URL
+            pd.DataFrame: Data loaded from the URL.
         """
-        try:
-            response = requests.get(self.source_path, timeout=30)
-            response.raise_for_status()
-            
-            # Si c'est un lien direct vers CSV
-            if 'text/csv' in response.headers.get('content-type', ''):
-                from io import StringIO
-                df = pd.read_csv(StringIO(response.text))
-                return df
-            
-            # Si c'est du JSON
-            elif 'application/json' in response.headers.get('content-type', ''):
-                data = response.json()
-                # Adapter selon la structure de l'API MAPAQ
-                if isinstance(data, dict) and 'records' in data:
-                    df = pd.DataFrame(data['records'])
-                elif isinstance(data, list):
-                    df = pd.DataFrame(data)
-                else:
-                    df = pd.DataFrame([data])
-                return df
-            
-            else:
-                raise ValueError(f"Unsupported content type: {response.headers.get('content-type')}")
-                
-        except requests.RequestException as e:
-            logger.error(f"Error fetching data from URL: {str(e)}")
-            raise
-    
+        if url is not None:
+            self.source_path = url
+        return self._load_from_url()
+
     def get_data_info(self) -> dict:
         """
         Get information about the loaded dataset.

@@ -41,7 +41,7 @@ dash>=2.8.0
 
 # ========== DATABASE ==========
 sqlalchemy>=1.4.0
-sqlite3
+# sqlite3
 psycopg2-binary>=2.9.0
 pymongo>=4.3.0
 
