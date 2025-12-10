@@ -148,13 +148,19 @@ class AddressDictionary:
             self.processing_stats['addresses_normalized'] += 1
         
         # Ajouter la colonne normalisée
-        normalized_data[f'{address_column}_normalized'] = normalized_addresses
-        
+        normalized_data[f"{address_column}_normalized"] = normalized_addresses
+
+        # Actualiser les données internes pour la suite du pipeline
+        self.data = normalized_data
+
         # Sauvegarder le cache
         self._save_cache(self.address_cache, self.address_cache_file)
-        
-        logger.info(f"Address normalization completed: {self.processing_stats['addresses_normalized']} normalized")
-        return normalized_data
+
+        logger.info(
+            f"Address normalization completed: "
+            f"{self.processing_stats['addresses_normalized']} normalized"
+        )
+        return self.data
     
     def _normalize_single_address(self, address: str) -> str:
         """
