@@ -24,6 +24,16 @@ class AddressDictionary:
     - Cache local pour éviter les appels répétés
     - Correction automatique des erreurs courantes
     """
+
+    """
+        Utility class for normalizing and geocoding restaurant addresses
+        in the TRACK-B MAPAQ project.
+
+        Covers:
+        - Issue #8: AddressDictionary implementation
+        - Issue #9: normalize_addresses
+        - Issue #10: geocode_addresses
+    """
     
     def __init__(self, data: pd.DataFrame, cache_dir: str = "cache"):
         """
