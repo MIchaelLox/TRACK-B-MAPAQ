@@ -24,7 +24,17 @@ class ThemeDictionary:
     - Détection automatique de nouveaux thèmes
     - Scoring de confiance pour les classifications
     """
-    
+
+    """
+    Thematic dictionary for classifying restaurants by cuisine type
+    in the TRACK-B MAPAQ project.
+
+    Covers:
+    - Issue #11: ThemeDictionary implementation
+    - Issue #12: classify_theme logic
+    - Issue #13: build_theme_column integration for the dataset
+    """
+
     def __init__(self, data: pd.DataFrame, theme_db_file: str = "theme_database.json"):
         """
         Initialiser le dictionnaire thématique.
